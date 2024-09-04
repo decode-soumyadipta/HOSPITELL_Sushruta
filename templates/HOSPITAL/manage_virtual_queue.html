@@ -1,0 +1,285 @@
+{% extends "HOSPITAL/hospital_base_layout.html" %}
+{% block title %}Manage Virtual Queue{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Manage Virtual Queue for {{ hospital.name }}</h1>
+    </div>
+
+    <div class="container mt-4">
+        <form id="queueForm" method="GET" action="{{ url_for('hospital_bp.manage_virtual_queue') }}">
+            <div class="form-group">
+                <label for="date">Select Date:</label>
+                <input type="date" name="date" value="{{ selected_date }}" onchange="fetchTimeSlots()">
+            </div>
+            <div class="form-group">
+                <label for="doctor_id">Select Doctor:</label>
+                <select name="doctor_id" id="doctorSelect" required onchange="fetchTimeSlots()">
+                    <option value="">Select Doctor</option>
+                    {% for doctor in doctors %}
+                    <option value="{{ doctor.id }}" {% if doctor.id == selected_doctor %}selected{% endif %}>{{ doctor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="time_slot">Select Time Slot:</label>
+                <select name="time_slot" id="timeSlotSelect" required>
+                    <option value="">Select Time Slot</option>
+                    {% for slot in time_slots %}
+                    <option value="{{ slot }}" {% if slot == selected_time_slot %}selected{% endif %}>{{ slot }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Show Patients</button>
+        </form>
+
+        {% if selected_doctor and selected_time_slot %}
+        <form id="setMaxPatientsForm" method="POST" action="javascript:void(0);" onsubmit="setMaxPatients()">
+            <input type="hidden" name="date" value="{{ selected_date }}">
+            <input type="hidden" name="doctor_id" value="{{ selected_doctor }}">
+            <input type="hidden" name="time_slot" value="{{ selected_time_slot }}">
+            <div class="form-group">
+                <label for="max_patients">Max Patients for {{ selected_time_slot }}:</label>
+                <input type="number" name="max_patients" id="maxPatientsInput" value="{{ max_patients }}">
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Set Max Patients</button>
+        </form>
+        {% endif %}
+
+        {% if patients %}
+        <button class="btn btn-success mt-4" onclick="createQueue()">Create Queue</button>
+       
+        <h3 class="mt-4">Checked-In Patients for {{ selected_date }}</h3>
+        <div id="queue-visualization" class="mt-4 d-flex flex-wrap justify-content-center queue-box">
+            {% for patient in patients %}
+                <div class="queue-circle {% if patient.is_emergency %}queue-emergency{% elif patient.user.age >= 60 %}queue-senior{% endif %}" id="patient-{{ patient.id }}" onclick="updatePatientStatus({{ patient.id }})">
+                    <span class="queue-number">{{ patient.queue_number }}</span>
+                    <p class="patient-name">{{ patient.user.name }}</p>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <div class="alert alert-info mt-4">No patients found for the selected date.</div>
+        {% endif %}
+
+        {% if waiting_list_patients %}
+        <h3 class="mt-4">Waiting List</h3>
+        <div id="waiting-list-visualization" class="mt-4 d-flex flex-wrap justify-content-center waiting-list-box">
+            {% for patient in waiting_list_patients %}
+                <div class="queue-circle queue-waiting" id="waiting-patient-{{ patient.id }}">
+                    <span class="queue-number">WL</span>
+                    <p class="patient-name">{{ patient.user.name }}</p>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <h3 class="mt-5">On-Spot Patient Registration</h3>
+        <div class="alert alert-info mt-4">
+            <strong>Note:</strong> If the maximum number of patients for today is reached, the patient will be placed on the waiting list.
+        </div>
+
+        <form id="onSpotRegistrationForm" method="POST" action="javascript:void(0);" onsubmit="onSpotRegistration()">
+            <div class="form-group">
+                <label for="name">Patient Name:</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Patient Email:</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="age">Patient Age:</label>
+                <input type="number" name="age" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="is_emergency">Emergency Status:</label>
+                <input type="checkbox" name="is_emergency" value="true">
+            </div>
+            <button type="submit" class="btn btn-primary">Register Patient</button>
+        </form>
+    </div>
+</main>
+
+<script>
+function fetchTimeSlots() {
+    const doctorId = document.querySelector('#doctorSelect').value;
+    const date = document.querySelector('input[name="date"]').value;
+
+    if (doctorId && date) {
+        fetch(`/get_time_slots/${doctorId}?date=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                const timeSlotSelect = document.getElementById('timeSlotSelect');
+                timeSlotSelect.innerHTML = '<option value="">Select Time Slot</option>';
+                data.time_slots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot;
+                    option.textContent = slot;
+                    timeSlotSelect.appendChild(option);
+                });
+            });
+    }
+}
+
+function setMaxPatients() {
+    const formData = new FormData(document.getElementById('setMaxPatientsForm'));
+
+    fetch('{{ url_for("hospital_bp.set_max_patients") }}', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Max patients set successfully');
+            fetchTimeSlots();
+        } else {
+            alert('Failed to set max patients');
+        }
+    });
+}
+
+function createQueue() {
+    showLoader(); // Show loader before starting the process
+    const selectedDate = document.querySelector('input[name="date"]').value;
+    const doctorId = document.querySelector('#doctorSelect').value;
+    const timeSlot = document.querySelector('select[name="time_slot"]').value;
+
+    if (!doctorId) {
+        alert('Please select a doctor.');
+        hideLoader();
+        return;
+    }
+
+    fetch(`/create_opd_queue?date=${selectedDate}&doctor_id=${doctorId}&time_slot=${timeSlot}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoader(); // Hide loader after process is completed
+        if (data.success) {
+            alert('Queue created successfully');
+            location.reload(); // Reload to show the updated queue
+        } else {
+            alert('Failed to create queue: ' + data.error);
+        }
+    })
+    .catch(error => {
+        hideLoader();
+        alert('An error occurred: ' + error.message);
+    });
+}
+
+function onSpotRegistration() {
+    const formData = new FormData(document.getElementById('onSpotRegistrationForm'));
+
+    fetch('{{ url_for("hospital_bp.on_spot_registration") }}', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Patient registered successfully');
+            location.reload();
+        } else {
+            alert('Failed to register patient');
+        }
+    });
+}
+
+function updatePatientStatus(patientId) {
+    showLoader(); // Show loader before starting the process
+    fetch(`/update_patient_status/${patientId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoader(); // Hide loader after process is completed
+        if (data.success) {
+            alert('Patient status updated to Done');
+            location.reload(); // Reload to show the updated queue
+        } else {
+            alert('Failed to update patient status: ' + data.error);
+        }
+    })
+    .catch(error => {
+        hideLoader();
+        alert('An error occurred: ' + error.message);
+    });
+}
+
+function showLoader() {
+    document.getElementById('loader').style.display = 'flex';
+}
+
+function hideLoader() {
+    document.getElementById('loader').style.display = 'none';
+}
+</script>
+
+<style>
+.queue-box, .waiting-list-box {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 10px;
+}
+.queue-waiting {
+    background-color: #FFC0CB; /* Pink for waiting list */
+    color: white;
+}
+.queue-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 10px;
+    cursor: pointer;
+    transition: transform 0.3s, background-color 0.3s;
+}
+
+.queue-circle:hover {
+    background-color: #38878e;
+    transform: scale(1.1);
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.queue-senior {
+    background-color: #c6b62a; /* Dark yellow for senior citizens */
+    color: #3E2723;
+}
+
+.queue-emergency {
+    background-color: #FF0000; /* Red for emergency cases */
+    color: white;
+}
+
+.queue-number {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.patient-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: antiquewhite;
+    text-align: center;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Panel</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/aos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tooplate-gymso-style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body data-spy="scroll" data-target="#navbarNav" data-offset="50">
+    <div class="content-wrapper">
+        <!-- MENU BAR -->
+        <nav class="navbar navbar-expand-lg fixed-top">
+            <div class="container">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Fit-O-Sphere Logo" class="logo" style="width: 64px; margin-right: 10px;">
+                <a href="#" class="navbar-brand smoothScroll" style="margin-right: 30px;">Admin Panel</a>
+
+                    <a href="/logout"><button class="tap-effect4">Log out</button></a>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- HERO -->
+        <section class="content">  <!-- Flashed messages container -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/signupbootstrap.css') }}">
+            
+            <div container-fluid>
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close btn-link opacity-0.7" data-dismiss="alert" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+            
+        
+            <div class="container">
+                <h2>1. Create new blog - </h2><br>
+
+                <a href="/new_post"><button class="tap-effect3">Post a new blog</button></a><br>
+                
+                <hr><br><h2>2. Add New Item - </h2><br>
+                <a href="{{ url_for('add_item') }}"><button class="tap-effect3">Add New Item</button></a><br>
+                <hr><br><h2>3. Manage Items - </h2><br>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Item ID</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Discount Price</th>
+                            <th scope="col">Image</th>
+                            <th scope="col">Edit</th>
+                            <th scope="col">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for item in items %}
+                        <tr>
+                            <th scope="row">{{ item.id }}</th>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.description }}</td>
+                            <td>₹ {{ "%.2f"|format(item.price) }}</td>
+                            <td>
+                                {% if item.discount_price %}
+                                ₹ {{ "%.2f"|format(item.discount_price) }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td><img src="{{ url_for('static', filename=item.image_file) }}" alt="{{ item.name }}" style="width: 50px; height: auto;"></td>
+                            <td><a href="{{ url_for('edit_item', item_id=item.id) }}"><button class="tap-effect">Edit</button></a></td>
+                            <td><a href="{{ url_for('delete_item', item_id=item.id) }}"><button class="tap-effect2">Delete</button></a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+
+
+
+
+                <hr><br>
+
+                <br><hr><br><h2>4. Edit blogs -</h2><br>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Blog no</th>
+                            <th scope="col">Title</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Edit</th>
+                            <th scope="col">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        
+                      {% for post in posts %}  
+                        
+                        
+                        <tr>
+                            <th scope="row">{{ post.sno}}</th>
+                            <td>{{ post.title}}</td>
+                            <td>{{ post.date}}</td>
+                            <td><a href="/edit/{{post.sno}}"><button class="tap-effect">Edit</button></a></td>
+                            <td><a href="/delete/{{post.sno}}"><button class="tap-effect2">Delete</button></a></td>
+                            
+                        </tr>
+
+
+                       {% endfor %}
+
+
+
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="site-footer">
+            <div class="container">
+                <div class="row">
+                    <div class="ml-auto col-lg-4 col-md-5">
+                        <p class="copyright-text">Copyright &copy; 2024 Fit-O-Sphere.
+                        <br>Developed by <a href="https://www.linkedin.com/in/soumyadipta-dey" target="_blank">Soumyadipta Dey</a></p>
+                    </div>
+                    <div class="d-flex justify-content-center mx-auto col-lg-5 col-md-7 col-12">
+                        <p class="mr-4">
+                            <i class="fa fa-envelope-o mr-1"></i>
+                            <a href="mailto:FSSQUAD@gmail.com">FSSQUAD@gmail.com</a>
+                        </p>
+                        <p><i class="fa fa-phone mr-1"></i> 6291024334</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/aos.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/type.js') }}"></script>
+</body>
+</html>

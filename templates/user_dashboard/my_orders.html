@@ -1,0 +1,217 @@
+{% extends "layout.html" %}
+{% block title %}My Orders{% endblock %}
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>My Orders</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+
+                <li class="breadcrumb-item active">My Orders</li>
+            </ol>
+        </nav>
+    </div><!-- End Page Title -->
+    <style>
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 1.2rem;
+}
+
+.card-text {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.btn {
+    margin-right: 5px;
+}
+
+.container {
+    margin-top: 50px;
+}
+
+form .form-label {
+    font-weight: bold;
+}
+
+form .form-control {
+    border-radius: 5px;
+}
+
+form .btn {
+    border-radius: 5px;
+}
+
+/* Styles for the modal */
+.message-dialog {
+    display: none; 
+    position: fixed; 
+    top: 20px; 
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999; 
+    width: 300px; 
+    background-color: whitesmoke; 
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    text-align: center;
+}
+
+.message-content {
+    position: relative;
+}
+
+#messageText {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+button {
+    background-color: red;
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    margin: 0 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color:rgba(255, 0, 0, 0.462) ;
+}
+
+#denyCancel {
+    background-color: rgb(117, 117, 243);
+}
+
+#denyCancel:hover {
+    background-color: rgba(117, 117, 243, 0.39);
+}
+
+#closeDialog {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #aaa;
+}
+
+#closeDialog:hover {
+    color: #000;
+}
+
+</style>
+    <div class="container mt-4">
+        <h2>My Orders</h2>
+        <div class="row">
+            {% for order in orders %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Order ID: {{ order.id }}</h5>
+                        <p class="card-text">
+                            <strong>Name:</strong> {{ order.name }}<br>
+                            <strong>Address:</strong> {{ order.address }}<br>
+                            <strong>Mobile:</strong> {{ order.mobile }}<br>
+                            <strong>Total Amount:</strong> ₹{{
+                            order.total_amount / 100 }}<br>
+                            <strong>Payment Status:</strong> {{
+                            order.payment_status }}<br>
+                            <strong>Payment Method:</strong> {{
+                            order.payment_method }}
+                        </p>
+                        <a href="{{ url_for('edit_order', order_id=order.id) }}"
+                            class="btn btn-edit"
+                            style="background-color: green; color: white; padding-block: 6px;">Edit</a>
+                        <td><button class="btn btn-danger"
+                                data-order-id="{{ order.id }}">Cancel
+                                Order</button></td>
+
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        <!-- Modal for Confirmation -->
+        <div id="messageDialog" class="message-dialog">
+            <div class="message-content"><br><br>
+                <p id="messageText"style="font-weight:bold;">Are you sure you want to cancel this order?</p>
+                <button id="confirmCancel">Yes, cancel it</button><br>
+               <br> <button id="denyCancel">No, keep it</button>
+                <span id="closeDialog">&times;</span>
+            </div>
+        </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dialog = document.getElementById('messageDialog');
+    const closeButton = document.getElementById('closeDialog');
+    const confirmButton = document.getElementById('confirmCancel');
+    const denyButton = document.getElementById('denyCancel');
+    let currentOrderId = null;
+
+    document.querySelectorAll('.btn-danger').forEach(button => {
+        button.addEventListener('click', function() {
+            currentOrderId = this.dataset.orderId;
+            dialog.style.display = 'block';
+        });
+    });
+
+    closeButton.addEventListener('click', function() {
+        dialog.style.display = 'none';
+    });
+
+    denyButton.addEventListener('click', function() {
+        dialog.style.display = 'none';
+    });
+
+    confirmButton.addEventListener('click', function() {
+        if (currentOrderId !== null) {
+            fetch(`/cancel_order/${currentOrderId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrf_token')  // CSRF token if required
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    location.reload();  // Reload to update order list
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        dialog.style.display = 'none';
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+</script>
+    </div>
+
+</main>
+{% endblock %}

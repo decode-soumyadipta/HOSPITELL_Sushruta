@@ -1,0 +1,94 @@
+<!-- manage_staff.html -->
+{% extends "HOSPITAL/hospital_base_layout.html" %}
+{% block title %}Manage Staff{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+  <div class="pagetitle">
+    <h1>Manage Staff in {{ ward.name }}</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('hospital_bp.hospital_dashboard') }}">Home</a></li>
+        <li class="breadcrumb-item active">Manage Staff</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="container mt-4">
+    <div class="form-container card p-4">
+      <h3 class="text-center">Add New Staff Member</h3>
+      <form method="POST" action="{{ url_for('hospital_bp.manage_staff', ward_id=ward.id) }}">
+        <div class="form-group">
+          <label for="name">Staff Name</label>
+          <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="role">Role</label>
+          <input type="text" class="form-control" id="role" name="role" required>
+        </div>
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select class="form-control" id="status" name="status">
+            <option value="active">Active</option>
+            <option value="on leave">On Leave</option>
+          </select>
+        </div>
+        <div class="form-group text-center">
+          <button type="submit" class="btn btn-orange-red">Add Staff</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="mt-4">
+      <h3 class="text-center">Registered Staff</h3>
+      <div class="list-group">
+        {% for staff in staff %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          {{ staff.name }} ({{ staff.role }})
+          <div>
+            <span class="badge bg-{{ 'success' if staff.status == 'active' else 'warning' }}">{{ staff.status }}</span>
+            <button class="btn btn-primary btn-sm" onclick="showStaffTimeline({{ staff.id }})">View Timeline</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Staff Status Timeline Modal -->
+<div class="modal fade" id="staffTimelineModal" tabindex="-1" aria-labelledby="staffTimelineLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staffTimelineLabel">Staff Status Timeline</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="timeline" id="staffTimeline"></ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showStaffTimeline(staffId) {
+  fetch(`/hospital/staff/${staffId}/timeline`)
+    .then(response => response.json())
+    .then(data => {
+      const timeline = document.getElementById('staffTimeline');
+      timeline.innerHTML = ''; // Clear existing timeline
+      data.forEach(change => {
+        const li = document.createElement('li');
+        li.innerHTML = `${change.timestamp}: <strong>${change.old_status}</strong> to <strong>${change.new_status}</strong>`;
+        timeline.appendChild(li);
+      });
+      const modal = new bootstrap.Modal(document.getElementById('staffTimelineModal'));
+      modal.show();
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block title %}Doctor Details{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Doctor Details</h1>
+    </div>
+
+    <div class="container mt-4">
+        <h2>{{ doctor.name }}</h2>
+        <p><strong>Expertise:</strong> {{ doctor.expertise }}</p>
+        <p><strong>Department:</strong> {{ doctor.department.name }}</p>
+        <p><strong>Chamber Timings:</strong> {{ doctor.chamber_timings }}</p>
+        <p><strong>Availability Days:</strong> {{ doctor.availability_days }}</p>
+
+        <a href="{{ url_for('user_bp.book_opd') }}" class="btn btn-primary mt-4">Book an Appointment</a>
+    </div>
+</main>
+{% endblock %}

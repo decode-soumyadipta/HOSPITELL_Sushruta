@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+{% block title %}Marketplace{% endblock %}
+{% block content %}
+<main id="main" class="main">
+
+  <div class="pagetitle">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Marketplace</h1>
+     
+      <a href="{{ url_for('cart') }}" class="btn btn-primary" style="margin-left: auto;background-color: rgba(255, 0, 0, 0.091); color: red; border: solid red 1px; font-family:sans-serif; font-size: larger;">Go to Cart →</a>
+    </div>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('user_bp.dashboard') }}">Home</a></li>
+        <li class="breadcrumb-item active">Marketplace</li>
+      </ol>
+    </nav>
+  </div><!-- End Page Title -->
+
+  <div class="container">
+    <br> <h3>Grab the best deal. <text style="color: orangered;">Shop now!</text> </h3><br><br>
+    <div class="row">
+      {% for item in items %}
+      <div class="col-md-4">
+        <div class="card mb-4">
+          <img class="card-img-top" src="{{ url_for('static', filename=item.image_file) }}" alt="{{ item.name }}">
+          <div class="card-body">
+            <h5 class="card-title">{{ item.name }}</h5>
+            <p class="card-text">{{ item.description }}</p>
+            {% if item.discount_price %}
+            <p class="card-text">
+              <span class="text-muted"><s>{{ "%.0f"|format(item.price) }}</s></span>
+              <span class="text-danger" style= "font-weight: bold;">₹ {{ "%.2f"|format(item.discount_price) }}</span>
+              <br><span class="text-success" style="font-weight: bold;">
+                {% set discount_percentage = ((item.price - item.discount_price) / item.price) * 100 %}
+                {{ "%.0f"|format(discount_percentage) }}% OFF
+              </span>
+            </p>
+            {% else %}
+            <p class="card-text">{{ item.price }}</p>
+            {% endif %}
+            <button id="add-to-cart-{{ item.id }}" class="btn btn-primary" style="background-color: orangered; border: none;" onclick="addToCart({{ item.id }})">Add to Cart</button>
+            <span id="spinner-{{ item.id }}" style="display: none; margin-left: 10px;">
+              <i class="fa fa-spinner fa-spin" style="color: orange;"></i>
+            </span>
+            <span id="message-{{ item.id }}" style="margin-left: 10px; font-weight: bold;"></span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Sticky Button with Cart Icon -->
+  <a href="{{ url_for('cart') }}" class="sticky-button">
+    <i class="fa fa-shopping-cart"></i>
+  </a>
+
+<script>
+  function addToCart(itemId) {
+      const spinner = document.getElementById(`spinner-${itemId}`);
+      const button = document.getElementById(`add-to-cart-${itemId}`);
+      const messageContainer = document.getElementById(`message-${itemId}`);
+
+      // Show spinner and disable button
+      spinner.style.display = 'inline-block';
+      button.disabled = true;
+      messageContainer.textContent = ''; // Clear previous messages
+
+      fetch(`/add_to_cart/${itemId}`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-Requested-With': 'XMLHttpRequest'
+          }
+      }).then(response => response.json()).then(data => {
+          if (data.success) {
+              setTimeout(() => {
+                  spinner.style.display = 'none';
+                  button.disabled = false;
+                  messageContainer.textContent = data.message;
+                  messageContainer.style.color = 'green'; // Success message color
+              }, 1000); // Show spinner for 1 second
+          } else {
+              console.error('Failed to add item to cart:', data.message);
+              spinner.style.display = 'none';
+              button.disabled = false;
+              messageContainer.textContent = data.message;
+              messageContainer.style.color = 'red'; // Error message color
+          }
+      }).catch(error => {
+          console.error('Error:', error);
+          spinner.style.display = 'none';
+          button.disabled = false;
+          messageContainer.textContent = 'An error occurred. Please try again.';
+          messageContainer.style.color = 'red'; // Error message color
+      });
+  }
+</script>
+
+<style>
+/* Sticky button styling with cart icon */
+.sticky-button {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    background-color: white;
+    color: orangered;
+    padding: 15px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 24px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+}
+
+.sticky-button:hover {
+    background-color: rgba(255, 68, 0, 0.144);
+}
+</style>
+
+</main>
+{% endblock %}

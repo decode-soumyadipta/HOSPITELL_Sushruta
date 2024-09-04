@@ -1,0 +1,171 @@
+{% extends "HOSPITAL/hospital_base_layout.html" %}
+{% block title %}OPD Bookings{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Manage OPD Bookings for {{ selected_date }}</h1>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Date Selector -->
+        <form method="GET" action="{{ url_for('hospital_bp.show_opd_bookings', hospital_id=hospital.id) }}" class="mb-4">
+            <div class="form-group">
+                <label for="date">Select Date:</label>
+                <input type="date" name="date" class="form-control w-25" id="date" value="{{ selected_date }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Show Bookings</button>
+        </form>
+
+        <!-- Display Bookings -->
+        {% if appointments %}
+            <table class="table table-bordered mt-4">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Patient Name</th>
+                        <th>Department</th>
+                        <th>Doctor</th>
+                        <th>Time Slot</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr class="{% if appointment.status == 'Pending' %}table-warning{% elif appointment.status == 'Cancelled' %}table-danger{% else %}table-success{% endif %}">
+                        <td>{{ appointment.id }}</td>
+                        <td>{{ appointment.user.name }}</td>
+                        <td>{{ appointment.doctor.department.name }}</td>
+                        <td>{{ appointment.doctor.name }}</td>
+                        <td>{{ appointment.time_slot }}</td>
+                        <td>{{ appointment.user.email }}</td>
+                        <td>{{ appointment.user.phone or 'N/A' }}</td>
+                        <td>{{ appointment.status }}</td>
+                        <td>
+                            {% if appointment.status == 'Pending' %}
+                            <button class="btn btn-primary btn-sm" onclick="showCheckInForm({{ appointment.id }})">Verify & Check-In</button>
+                            {% else %}
+                            <span>Checked In</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Check-In Form -->
+                   <!-- Check-In Form -->
+<tr id="check-in-form-{{ appointment.id }}" style="display: none;">
+    <td colspan="9">
+        <div class="form-group">
+            <label for="admission-code-{{ appointment.id }}">Enter 4-Digit Appointment Code:</label>
+            <input type="text" id="admission-code-{{ appointment.id }}" class="form-control w-25 d-inline-block">
+            <button class="btn btn-success btn-sm ml-2" onclick="verifyAppointmentCode({{ appointment.id }})">Verify</button>
+        </div>
+        <div id="verification-result-{{ appointment.id }}" class="mt-2"></div>
+        
+        <!-- Emergency Status Checkbox -->
+        <div class="form-group">
+            <label for="emergency_status_{{ appointment.id }}">Emergency:</label>
+            <input type="checkbox" id="emergency_status_{{ appointment.id }}" name="is_emergency" value="true">
+        </div>
+    </td>
+</tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-info">No bookings found for the selected date.</div>
+        {% endif %}
+    </div>
+</main>
+
+<script>
+    // Show the check-in form
+    function showCheckInForm(appointmentId) {
+        document.getElementById(`check-in-form-${appointmentId}`).style.display = 'table-row';
+    }
+
+    // Verify the appointment code
+    function verifyAppointmentCode(appointmentId) {
+    const appointmentCode = document.getElementById(`admission-code-${appointmentId}`).value;
+
+    fetch(`/verify_appointment_code/${appointmentId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ appointment_code: appointmentCode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultDiv = document.getElementById(`verification-result-${appointmentId}`);
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="text-success">Appointment code verified! &#10004;</div>
+                <button class="btn btn-primary btn-sm mt-2" onclick="completeCheckIn(${appointmentId})">Complete Check-In</button>
+            `;
+        } else {
+            resultDiv.innerHTML = `<div class="text-danger">Invalid appointment code.</div>`;
+        }
+    });
+}
+
+    // Complete the check-in process
+    function completeCheckIn(appointmentId) {
+    const patientAge = prompt("Please enter the patient's age:");
+    const isEmergency = document.getElementById(`emergency_status_${appointmentId}`).checked;
+
+    fetch(`/complete_opd_check_in/${appointmentId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            age: patientAge,
+            is_emergency: isEmergency  // Pass the emergency status as a boolean
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Check-In Completed Successfully!');
+            location.reload(); // Refresh the page to show updated status
+        } else {
+            alert('Failed to complete check-in.');
+        }
+    });
+}
+
+</script>
+
+<style>
+    .table-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .table-warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .table-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        background-color: #f8f9fa;
+    }
+
+    .card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .card .card-body {
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}

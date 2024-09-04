@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+
+<main id="main" class="main">
+
+  <div class="pagetitle">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>My Cart</h1>
+        <a href="{{ url_for('marketplace') }}" class="btn btn-primary" style="background-color: rgba(255, 0, 0, 0.091); color: red; border: solid red 1px; font-family:sans-serif; font-size: larger;">← Continue shopping</a>
+    </div>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">Home</a></li>
+        <li class="breadcrumb-item active">Marketplace</li>
+        <li class="breadcrumb-item active">My Cart</li>
+      </ol>
+    </nav>
+  
+  </div><br><!-- End Page Title -->
+
+  <div class="container">  
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="alert alert-{{ messages[0][0] }}">
+        {{ messages[0][1] }}
+      </div>
+    {% endif %}
+  {% endwith %}
+  
+    <h3>Cart content:</h3><br>
+    {% if cart.items %}
+    <form id="cart-form">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+
+            <th>Discounted Price</th>
+            <th>Total</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cart_item in cart.items %}
+          <tr id="item-{{ cart_item.item.id }}">
+            <td>{{ cart_item.item.name }}</td>
+            <td>
+              <button type="button" class="btn btn-secondary btn-sm" style="background-color: rgba(255, 0, 0, 0.157); color: black;padding-inline: 6px;" onclick="updateQuantity({{ cart_item.item.id }}, -1)">-</button>
+              <input type="number" id="quantity-{{ cart_item.item.id }}" value="{{ cart_item.quantity }}" min="1" style="width: 50px; text-align: center;" oninput="recalculateTotal()">
+              <button type="button" class="btn btn-secondary btn-sm" style="background-color: greenyellow;color: black; padding-inline: 4px;" onclick="updateQuantity({{ cart_item.item.id }}, 1)">+</button>
+            </td>
+            
+            <td>{{ cart_item.item.discount_price }}</td>
+            <td id="total-{{ cart_item.item.id }}">{{ cart_item.item.discount_price * cart_item.quantity }}</td>
+            <td>
+              <button type="button" class="btn btn-danger" style="font-size: small;" onclick="removeFromCart({{ cart_item.item.id }})">Remove</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button hidden type="submit" class="btn btn-primary">Update Cart</button>
+    </form>
+    <form action="{{ url_for('checkout') }}" method="post">
+      <button type="submit" id="checkout-button" class="btn btn-primary" style="font-size: large; font-weight: bold; padding-bottom: 10px;">Checkout →</button>
+      
+    </form>
+    {% else %}
+    <p>Your cart is empty.</p>
+    {% endif %}
+    <p><h4>Total Amount: ₹ <span id="total-amount">{{ "%.2f"|format(total_amount) }}</span></h4></p>
+  </div>
+
+</main>
+
+<script>
+
+
+function updateQuantity(itemId, change) {
+    const quantityInput = document.getElementById(`quantity-${itemId}`);
+    let newQuantity = parseInt(quantityInput.value) + change;
+
+    if (newQuantity < 1) return;
+
+    quantityInput.value = newQuantity;
+    const price = parseFloat(document.getElementById(`total-${itemId}`).textContent) / (parseInt(quantityInput.value) - change);
+    document.getElementById(`total-${itemId}`).textContent = (newQuantity * price).toFixed(2);
+
+    fetch('/update_cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new URLSearchParams({
+            [`quantity_${itemId}`]: newQuantity
+        })
+    }).then(response => response.json()).then(data => {
+        if (!data.success) {
+            console.error('Failed to update cart:', data.message);
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+    });
+
+    recalculateTotal();
+}
+
+function recalculateTotal() {
+    let totalAmount = 0;
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const quantity = parseInt(row.querySelector('input[type=number]').value);
+        const price = parseFloat(row.querySelector('td:nth-child(3)').textContent);
+        totalAmount += quantity * price;
+    });
+
+    document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
+}
+
+function removeFromCart(itemId) {
+    fetch(`/remove_from_cart/${itemId}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            document.getElementById(`item-${itemId}`).remove();
+            recalculateTotal();
+        } else {
+            console.error('Failed to remove item:', data.message);
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+    });
+}
+</script>
+
+{% endblock %}

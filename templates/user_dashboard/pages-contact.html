@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+            
+              <main id="main" class="main">
+            
+                <div class="pagetitle">
+                  <h1>Reach us!</h1>
+                  <nav>
+                    <ol class="breadcrumb">
+                      <li class="breadcrumb-item"><a href="{{ url_for('user_bp.dashboard') }}">Home</a></li>
+                      <li class="breadcrumb-item active">Contact</li>
+                    </ol>
+                  </nav>
+                  
+                  
+                </div><!-- End Page Title -->
+                <section class="contact section" id="contact">
+        
+                  <div class="container">
+                    
+                       <div class="row">
+                        
+                
+                         
+                                
+                                <h2 class="mb-4 pb-2" data-aos="fade-up" data-aos-delay="200">Feel free to ask anything</h2>
+                                <!-- Flashed messages container -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                        <div class="alert alert-dismissible fade show" role="alert">
+                            {% for category, message in messages %}
+                            <div
+                                class="alert alert-{{ category }} alert-dismissible fade show"
+                                role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert"
+                                    aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                
+                                
+                                <form id="contact-form" action="/user-contact" method="post" class="contact-form webform" data-aos="fade-up" data-aos-delay="400" role="form" >
+                                    <input type="text" class="form-control" name="cf-name" placeholder="Name">
+                
+                                    <input type="tel" class="form-control" name="cf-phone" placeholder="Phone Number">
+                
+                                    <input type="email" class="form-control" name="cf-email" placeholder="Email">
+                
+                                    <textarea class="form-control" rows="5" name="cf-message" placeholder="Message"></textarea>
+                                    
+                                    <button type="submit" class="form-control" id="submit-button" name="submit">Send Message</button>
+                                    
+                                </form>
+                            </div>
+                </section>
+                
+              </main><!-- End #main -->
+              
+              {% endblock %}

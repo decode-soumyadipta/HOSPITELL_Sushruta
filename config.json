@@ -1,0 +1,21 @@
+{
+    "params":
+    {
+        "local_server":"True",
+        "local_uri": "mysql+pymysql://root:@localhost/fit_o_sphere",
+        "prod_uri": "mysql+pymysql://root:@localhost/fit_o_sphere",
+        "gmail-id":"soumyadiptadey7@gmail.com",
+        "gmail-password":"wtfjunpbojyoyasn",
+        "admin-user":"soumyadiptadey7@gmail.com",
+        "admin-password":"20052016",
+        "upload_location": "C:\\Users\\soumy\\OneDrive\\Desktop\\SIH 2024\\static\\images",
+        "mysql_user": "root",
+        "mysql_password": "",
+        "mysql_db": "fit_o_sphere",
+        "mysql_host": "localhost",
+        "google_client_id": "78983541185-4ate9kdk3h77gtd0nu5bdi9ngvhet5tf.apps.googleusercontent.com",
+        "google_client_secret": "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"
+       
+    }
+
+}

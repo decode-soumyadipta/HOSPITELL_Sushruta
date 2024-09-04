@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>{% block title %}{% endblock %}</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/x-icon">
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+
+
+
+
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/boxicons/css/boxicons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/quill/quill.snow.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/quill/quill.bubble.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/remixicon/remixicon.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/simple-datatables/style.css') }}">
+
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/aos.css') }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/tooplate-gymso-style.css') }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/exercise.css') }}">
+  
+    
+
+
+
+
+
+
+
+
+
+  <!-- Template Main CSS File -->
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    .shining-icon {
+        animation: shine 1.5s infinite alternate;
+    }
+
+    @keyframes shine {
+        0% {
+            color:  #899bbd;
+            text-shadow: 0 0 5px transparent;
+        }
+        100% {
+            color:  #899bbd;
+            text-shadow: 0 0 20px orangered, 0 0 30px orangered, 0 0 40px orangered,0 0 50px orangered,0 0 60px red,0 0 70px red;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="#" class="logo d-flex align-items-center">
+        <img src="{{ url_for('static', filename='images/favicon.ico') }}" alt="" > 
+        <span class="d-none d-lg-block">MediReach.Ai</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
+
+    <div class="search-bar">
+      <form class="search-form d-flex align-items-center" method="POST" action="{{ url_for('search2') }}">
+        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+    </form>
+    </div><!-- End Search Bar -->
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+
+        <li class="nav-item d-block d-lg-none">
+          <a class="nav-link nav-icon search-bar-toggle " href="#">
+            <i class="bi bi-search"></i>
+          </a>
+        </li><!-- End Search Icon-->
+
+       
+
+         
+          
+
+        <li class="nav-item dropdown">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+              <i class="bi bi-chat-left-text"></i>
+              <span class="badge bg-primary badge-number">{{ notifications|length }}</span>
+          </a><!-- End Messages Icon -->
+      
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
+              <li class="dropdown-header">
+                  Notifications
+                  <a href="{{ url_for('hospital_bp.clear_notifications') }}"><span class="badge rounded-pill bg-primary p-2 ms-2">Clear All</span></a>
+              </li>
+              <li>
+                  <hr class="dropdown-divider">
+              </li>
+              {% for notification in notifications %}
+              <li class="message-item">
+                  <a href="#">
+                      <div>
+                          <h4>{{ notification.message }}</h4>
+                          <p>{{ notification.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                      </div>
+                  </a>
+              </li>
+              <li>
+                  <hr class="dropdown-divider">
+              </li>
+              {% endfor %}
+          </ul><!-- End Messages Dropdown Items -->
+      </li>
+      
+
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="{{ url_for('static', filename=user.profile_image) }}" alt="Profile" class="img-fluid rounded-circle">
+            <span class="d-none d-md-block dropdown-toggle ps-2"><text style="text-transform: none; color: white;">Hello,</text> {{ user.name }}</span>
+          </a><!-- End Profile Iamge Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="profile">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="profile">
+                <i class="bi bi-gear"></i>
+                <span>Account Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="faq">
+                <i class="bi bi-question-circle"></i>
+                <span>Need Help?</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="/signout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Sign Out</span>
+              </a>
+            </li>
+
+          </ul><!-- End Profile Dropdown Items -->
+        </li><!-- End Profile Nav -->
+
+      </ul>
+    </nav><!-- End Icons Navigation -->
+
+  </header><!-- End Header -->
+
+
+  <!-- Flashed messages container -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/signupbootstrap.css') }}">
+
+<div container-fluid>
+	{% for category, message in messages %}
+	<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+		{{ message }}
+		<button type="button" class="close btn-link opacity-0.7" data-dismiss="alert" aria-label="Close">
+		  <span aria-hidden="true">&times;</span>
+		</button>
+	  </div>
+	  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{% block content %}{% endblock %}
+
+
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="dashboard">
+          <i class="bi-terminal-plus"></i>
+          <span>Bed Availability</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
+
+      
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="nutrition">
+          <i class="bi-robot shining-icon"></i>
+          <span style="color: orangered;">Ask KUSAHQ!</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="{{ url_for('user_bp.book_opd') }}">
+          <i class="bi-bus-front"></i>
+          <span>Book OPD Appointment</span>
+        </a>
+      </li><!-- End Error 404 Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="{{ url_for('user_bp.view_appointments') }}">
+          <i class="bi-clock-history "></i>
+          <span>Upcoming OPD Appointments</span>
+        </a>
+      </li><!-- End Contact Page Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="community">
+          <i class="bi-heart"></i>
+          <span>MediReach Community</span>
+        </a>
+      </li><!-- End F.A.Q Page Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="marketplace">
+          <i class="bi-cart4"></i>
+          <span>Care SHOP</span>
+        </a>
+      </li><!-- End Register Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="my_orders">
+          <i class="bi bi-bag"></i>
+          <span>My Orders</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="user-blogs">
+          <i class="bi-emoji-smile"></i>
+          <span>blogs</span>
+        </a>
+      </li><!-- End Login Page Nav -->
+
+     
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="faq">
+          <i class="bi-question-circle"></i>
+          <span>FAQ</span>
+        </a>
+      </li><!-- End Blank Page Nav -->
+
+    </ul>
+
+  </aside><!-- End Sidebar-->
+
+
+  
+
+  <!-- ======= Footer ======= -->
+  <footer class="site-footer">
+    <div class="container">
+         <div class="row">
+
+              <div class="ml-auto col-lg-4 col-md-5">
+                  <p class="copyright-text">Copyright &copy; 2024 Fit-O-Sphere.
+                  
+                  <br>Developed by <a href="https://www.linkedin.com/in/soumyadipta-dey" target="_blank">Soumyadipta Dey</a></p>
+
+              </div>
+
+              <div class="d-flex justify-content-center mx-auto col-lg-5 col-md-7 col-12">
+                  <p class="mr-4">
+                      <i class="fa fa-envelope-o mr-1"></i>
+                      <a href="#">FSSQUAD@gmail.com</a>
+                  </p>
+
+                  <p><i class="fa fa-phone mr-1"></i> 6291024334</p>
+              </div>
+              
+         </div>
+    </div>
+</footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+
+
+
+  <script src="{{ url_for('static', filename='vendor/apexcharts/apexcharts.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/chart.js/chart.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/echarts/echarts.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/quill/quill.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/simple-datatables/simple-datatables.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/tinymce/tinymce.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/php-email-form/validate.js') }}"></script>
+
+
+
+
+
+
+
+
+
+  <!-- Template Main JS File -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+   <!-- Template Main JS File -->
+
+   <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/aos.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/type.js') }}"></script>
+
+</body>
+
+</html>

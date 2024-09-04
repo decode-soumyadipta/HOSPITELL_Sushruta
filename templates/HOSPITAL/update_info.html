@@ -1,0 +1,208 @@
+{% extends "HOSPITAL/hospital_base_layout.html" %}
+
+{% block title %}Hospital Info{% endblock %}
+
+{% block content %}
+
+<main id="main" class="main">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <div class="pagetitle">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Details Info</h1>
+    </div>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('hospital_bp.hospital_dashboard') }}">Home</a></li>
+        <li class="breadcrumb-item active">Details Info</li>
+      </ol>
+    </nav>
+  </div><!-- End Page Title -->
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <style>
+      body {
+          background-color: #f9f9f9;
+      }
+      .form-container {
+          background-color: white;
+          color: #333;
+          padding: 30px;
+          border-radius: 10px;
+          margin-top: 50px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .form-control {
+          border-radius: 0;
+      }
+      .form-control:focus {
+          box-shadow: none;
+          border-color: #ff4500;
+      }
+      .btn-orange-red {
+          background-color: #ff4500;
+          border-color: #ff4500;
+          color: white;
+      }
+      .btn-orange-red:hover {
+          background-color: #e03d00;
+          border-color: #e03d00;
+      }
+      .map-container {
+          height: 400px;
+          margin-bottom: 20px;
+          position: relative;
+      }
+      .leaflet-control-locate-me {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          z-index: 1000;
+          background-color: #ff4500;
+          color: white;
+          padding: 5px 10px;
+          border-radius: 5px;
+          cursor: pointer;
+      }
+  </style>
+
+  <div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container mt-3">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+            <div class="form-container card">
+                <h3 class="text-center">Update Hospital Information</h3>
+                <form method="POST" action="{{ url_for('hospital_bp.update_info') }}">
+                  <div class="form-group">
+                      <label for="name">Hospital Name</label>
+                      <input type="text" class="form-control" id="name" name="name" placeholder="Enter hospital name" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="contact_info">Contact Information</label>
+                      <input type="text" class="form-control" id="contact_info" name="contact_info" placeholder="Enter contact information">
+                  </div>
+                  <div class="form-group">
+                      <label for="address">Address <br> <text style="color: grey; font-size: smaller; font-weight: bolder;">Note: Current location detected automatically. Drag the Map Marker to adjust</text></label>
+                      <input type="text" class="form-control" id="address" name="address" placeholder="Search address" required readonly>
+                  </div>
+                  <div id="map" class="map-container"></div>
+                  
+                  <div class="form-group">
+                      <label for="latitude">Latitude</label>
+                      <input type="text" class="form-control" id="latitude" name="latitude" readonly>
+                  </div>
+                  <div class="form-group">
+                      <label for="longitude">Longitude</label>
+                      <input type="text" class="form-control" id="longitude" name="longitude" readonly>
+                  </div>
+                  <div class="form-group text-center">
+                      <button type="submit" class="btn btn-orange-red">Submit</button>
+                  </div>
+              </form>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <script>
+  let map;
+  let marker;
+  let popup;
+
+  function initMap() {
+      if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+              const userLocation = [position.coords.latitude, position.coords.longitude];
+              initializeMap(userLocation);
+              updatePosition({lat: userLocation[0], lng: userLocation[1]});
+              geocodeLatLng(userLocation[0], userLocation[1]);
+          }, function() {
+              initializeMap([51.505, -0.09]); // Fallback to default location (London)
+          });
+      } else {
+          initializeMap([51.505, -0.09]); // Fallback to default location (London)
+      }
+  }
+
+  function initializeMap(initialLocation) {
+      map = L.map('map').setView(initialLocation, 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      marker = L.marker(initialLocation, {draggable: true}).addTo(map);
+
+      // Initialize the popup for the marker
+      popup = L.popup({ closeButton: false, autoClose: false })
+          .setLatLng(initialLocation)
+          .setContent("Determining address...")
+          .openOn(map);
+
+      marker.bindPopup(popup).openPopup();
+
+      // Update the form fields when the marker is dragged
+      marker.on('dragend', function (e) {
+          const latLng = marker.getLatLng();
+          updatePosition(latLng);
+          geocodeLatLng(latLng.lat, latLng.lng);
+      });
+
+      // Update the form fields when the map is clicked
+      map.on('click', function (e) {
+          marker.setLatLng(e.latlng);
+          updatePosition(e.latlng);
+          geocodeLatLng(e.latlng.lat, e.latlng.lng);
+      });
+
+      // Update the popup content when marker position changes
+      marker.on('move', function(e) {
+          popup.setLatLng(e.latlng);
+      });
+  }
+
+  function updatePosition(latLng) {
+      document.getElementById('latitude').value = latLng.lat;
+      document.getElementById('longitude').value = latLng.lng;
+  }
+
+  function geocodeLatLng(lat, lng) {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+
+      fetch(url)
+          .then(response => response.json())
+          .then(data => {
+              if (data && data.display_name) {
+                  document.getElementById('address').value = data.display_name;
+                  marker.getPopup().setContent(data.display_name).openOn(map);
+              } else {
+                  document.getElementById('address').value = 'Cannot determine address at this location.';
+                  marker.getPopup().setContent('Cannot determine address at this location.').openOn(map);
+              }
+          });
+  }
+
+
+
+  document.addEventListener('DOMContentLoaded', function () {
+      initMap();
+  });
+  </script>
+</main><!-- End #main -->
+
+{% endblock %}

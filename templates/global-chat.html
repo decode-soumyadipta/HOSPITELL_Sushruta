@@ -1,0 +1,241 @@
+{% extends "layout.html" %}
+
+{% block title %}FS Community{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <style>
+        .like-button {
+            cursor: pointer;
+            color: grey;
+        }
+        .like-button.liked {
+            color: red;
+        }
+        .comment {
+            margin-top: 10px;
+        }
+        .comment img {
+            margin-right: 10px;
+        }
+        .media-preview {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .upload-card {
+            background-color: rgba(255, 68, 0, 0.083); /* Light orange */
+            border: 1px solid red; /* Optional: darker orange for contrast */
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+
+    <div class="pagetitle">
+        <h1>FS Community</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('user_bp.dashboard') }}">Home</a></li>
+                <li class="breadcrumb-item active">FS Community</li>
+            </ol>
+            <h3>Stay fit and share your fitness story. <span style="color: rgb(122, 182, 32);">Fitness Community</span></h3>
+        </nav>
+        <p data-aos="fade-up" style="font-style: italic; color: red;">Note: Never share sensitive content and help foster the Fitness realm.</p>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="my-3">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+
+    <div class="container upload-card">
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <h3>What's on your mind? <span style="color: orangered;">Create a new post.</span></h3>
+            <div class="form-group">
+                {{ form.content.label(class="font-weight-bold") }}
+                {{ form.content(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.media.label(class="font-weight-bold") }}<span style="color: red; font-size: smaller;"> (only .jpg, .jpeg, .png, .gif, .mp4, .mov, .avi files)</span>
+                {{ form.media(class="form-control-file", multiple=True, onchange="previewMedia(event)") }}
+            </div>
+            <div id="media-previews"></div>
+            {{ form.submit(class="btn btn-primary btn-block", style="background-color: orangered; border-color: orangered") }}
+        </form>
+    </div><br><br>
+
+    <div class="container">
+        <h3>Community Posts:</h3>
+        {% for post in posts %}
+        <div class="card my-3">
+            <div class="card-body">
+                <h5 class="card-title" style="color: black;">
+                    <img src="{{ url_for('static', filename=post.author.profile_image) }}" alt="Profile Image" class="img-fluid rounded-circle" style="width: 40px; height: 40px;"> {{ post.author.name }}
+                </h5>
+                <p class="card-text" style="font-weight: 500; color: black;">{{ post.content }}</p>
+                
+                {% for media in post.media %}
+                    {% if media.file_type == 'image' %}
+                        <img src="{{ url_for('static', filename='images/' ~ media.file_name) }}" alt="Post Image" class="media-preview">
+                    {% elif media.file_type == 'video' %}
+                        <video controls class="media-preview">
+                            <source src="{{ url_for('static', filename='images/' ~ media.file_name) }}" type="video/{{ media.file_name.rsplit('.', 1)[1].lower() }}">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% endif %}
+                {% endfor %}
+                
+                <p class="text-muted">Posted on: {{ post.created_at.strftime('%Y-%m-%d | %H:%M') }}</p>
+
+                <!-- Like Button -->
+                <button class="btn like-button {% if post.liked_by_user(current_user) %}liked{% endif %}" data-post-id="{{ post.id }}">
+                    {% if post.liked_by_user(current_user) %}
+                    <i class="fas fa-heart liked"></i> <span class="like-count">Likes: {{ post.likes|length }}</span>
+                    {% else %}
+                    <i class="far fa-heart"></i> <span class="like-count">Likes: {{ post.likes|length }}</span>
+                    {% endif %}
+                </button>
+
+                <!-- Display Comments -->
+                <div class="comments mt-2">
+                    {% for comment in post.comments %}
+                    <div class="comment">
+                        <img src="{{ url_for('static', filename=comment.comment_author.profile_image) }}" alt="Profile Image" class="img-fluid rounded-circle" style="width: 20px; height: 20px;">
+                        <strong>{{ comment.comment_author.name }}:</strong> {{ comment.content }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Comment Form -->
+                <form class="comment-form" data-post-id="{{ post.id }}">
+                    <div class="form-group">
+                        <textarea class="form-control" name="content" rows="1" placeholder="Add a comment..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Post</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</main>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+<script>
+$(document).ready(function() {
+    $(".like-button").click(function() {
+        var post_id = $(this).data('post-id');
+        var button = $(this);
+        $.ajax({
+            url: '/like/' + post_id,
+            type: 'POST',
+            success: function(response) {
+                if (response.result == 'liked') {
+                    button.addClass('liked');
+                    button.html('<i class="fas fa-heart liked"></i> Likes: ' + response.likes_count);
+                } else {
+                    button.removeClass('liked');
+                    button.html('<i class="far fa-heart"></i> Likes: ' + response.likes_count);
+                }
+            }
+        });
+    });
+
+    $(".comment-form").submit(function(event) {
+        event.preventDefault();
+
+        var form = $(this);
+        var post_id = form.data('post-id');
+        var content = form.find('textarea[name="content"]').val();
+
+        $.ajax({
+            url: '/comment/' + post_id,
+            type: 'POST',
+            data: { content: content },
+            success: function(response) {
+                if (response.result == 'success') {
+                    form.find('textarea[name="content"]').val('');
+                    var newComment = '<div class="comment">' +
+                                     '<img src="' + response.comment_author_image + '" alt="Profile Image" class="img-fluid rounded-circle" style="width: 20px; height: 20px;"> ' +
+                                     '<strong>' + response.comment_author_name + ':</strong> ' +
+                                     response.comment_content +
+                                     '</div>';
+                    form.prev('.comments').append(newComment);
+                }
+            }
+        });
+    });
+});
+
+function previewMedia(event) {
+    var files = event.target.files;
+    var previewsContainer = document.getElementById('media-previews');
+    previewsContainer.innerHTML = ''; // Clear existing previews
+
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var fileType = file.type.split('/')[0]; // Determine type
+
+        if (!allowedFile(file.name)) {
+            alert('Unsupported file format: ' + file.name);
+            continue; // Skip unsupported files
+        }
+
+        var reader = new FileReader();
+        reader.onload = (function(file) {
+            return function(event) {
+                // Create a container for each media item
+                var mediaContainer = document.createElement('div');
+                mediaContainer.className = 'media-container';
+
+                // Create cancel button
+                var cancelButton = document.createElement('button');
+                cancelButton.innerText = 'Cancel';
+                cancelButton.className = 'btn btn-danger btn-sm cancel-button';
+                cancelButton.onclick = function() {
+                    mediaContainer.remove(); // Remove the media container
+                    // Update input logic (if needed)
+                };
+
+                // Determine the type of media
+                var mediaElement;
+                if (file.type.startsWith('image/')) {
+                    mediaElement = document.createElement('img');
+                    mediaElement.src = event.target.result;
+                    mediaElement.className = 'media-preview';
+                } else if (file.type.startsWith('video/')) {
+                    mediaElement = document.createElement('video');
+                    mediaElement.src = event.target.result;
+                    mediaElement.className = 'media-preview';
+                    mediaElement.controls = true;
+                }
+
+                mediaContainer.appendChild(cancelButton);
+                mediaContainer.appendChild(mediaElement);
+                previewsContainer.appendChild(mediaContainer);
+            };
+        })(file);
+
+        reader.readAsDataURL(file);
+    }
+}
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% block title %}Order Confirmation{% endblock %}
+{% block content %}
+
+<main id="main" class="main">
+  <div class="pagetitle">
+    <h1>Order Confirmation</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">Home</a></li>
+        <li class="breadcrumb-item active">Order Confirmation</li>
+      </ol>
+    </nav>
+  </div><!-- End Page Title -->
+
+  <div class="container">
+    <div class="card order-card">
+      <div class="card-body">
+        
+        <h2>Thank you for your order, {{ order.name }}!</h2>
+        <p>Your order has been placed successfully. Below are the details:</p>
+        <ul class="list-unstyled">
+          <li><strong>Order ID:</strong> {{ order.id }}</li>
+          <li><strong>Name:</strong> {{ order.name }}</li>
+          <li><strong>Address:</strong> {{ order.address }}</li>
+          <li><strong>Mobile:</strong> {{ order.mobile }}</li>
+          <li><strong>Total Amount:</strong> ₹{{ order.total_amount / 100 }}</li>
+          <li><strong>Payment Status:</strong> {{ order.payment_status }}</li>
+          <li><strong>Payment Method:</strong> {{ order.payment_method }}</li>
+        </ul>
+        <a href="{{ url_for('marketplace') }}" class="btn btn-primary" style="background-color: orangered;">Continue Shopping</a>
+      </div>
+    </div>
+  </div>
+  
+  <div id="confetti-container"></div>
+  <div id="congrats-text">CONGRATULATIONS!</div>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+        launchConfetti();
+        showCongratsText();
+    }
+});
+
+function launchConfetti() {
+    var confettiContainer = document.getElementById('confetti-container');
+    
+    for (var i = 0; i < 100; i++) {
+        var confettiPiece = document.createElement('div');
+        confettiPiece.classList.add('confetti-piece');
+        
+        confettiPiece.style.backgroundColor = getRandomColor();
+        confettiPiece.style.left = Math.random() * 100 + 'vw';
+        confettiPiece.style.top = Math.random() * 100 + 'vh';
+        confettiPiece.style.animationDelay = Math.random() * 1 + 's';
+
+        confettiContainer.appendChild(confettiPiece);
+        
+        setTimeout(function() {
+            confettiPiece.remove();
+        }, 4000);
+    }
+}
+
+function getRandomColor() {
+    var colors = ['#f39c12', '#e74c3c', '#9b59b6', '#3498db', '#1abc9c', '#2ecc71', '#f1c40f'];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function showCongratsText() {
+    var congratsText = document.getElementById('congrats-text');
+    congratsText.style.display = 'block';
+}
+
+  
+  </script>
+</main>
+
+{% endblock %}
+
+

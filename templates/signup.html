@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+     <title>Sign-up / Login</title>
+
+     <meta charset="UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+     <meta name="description" content="">
+     <meta name="keywords" content="">
+     <meta name="author" content="">
+     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+     <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/x-icon">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+     
+</head>
+
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Fit-O-Sphere Logo" class="logo" style="width: 75px">
+
+<body data-spy="scroll" data-target="#navbarNav" data-offset="50">
+	
+<h2>Login to Hospitell</h2>
+
+<!-- Flashed messages container -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/signupbootstrap.css') }}">
+
+<div container-fluid>
+	{% for category, message in messages %}
+	<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+		{{ message }}
+		<button type="button" class="close btn-link opacity-0.7" data-dismiss="alert" aria-label="Close">
+		  <span aria-hidden="true">&times;</span>
+		</button>
+	  </div>
+	  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+<div class="container" id="container">
+	<div class="form-container sign-up-container">
+        
+		<form action="/signup" method="post">
+			<h1>Create Account</h1>
+			<div class="social-container">
+				<a href="{{ url_for('google.login') }}" class="social"><i class="fab fa-google-plus-g"></i></a>
+				<a href="{{ url_for('facebook.login') }}" class="social"><i class="fab fa-facebook-f"></i></a>
+			</div>
+			<span>or use your email for registration</span>
+			<input type="text" placeholder="Name" name="name"/>
+			<input type="email" placeholder="Email" name="email" required/>
+			<input type="password" placeholder="Password" name="password"/><br>
+			<div class="custom-select-wrapper">
+				<select name="role" required>
+					<option value="" disabled selected>Select role</option>
+					<option value="hospital_admin">Hospital Admin</option>
+					<option value="patient">User</option>
+					
+				</select>
+			</div><br><div id="hospital-fields" style="display:none;">
+				<input type="text" name="hospital_name" placeholder="Hospital Name">
+			</div>
+			<div id="driver-fields" style="display:none;">
+				<input type="text" name="driver_name" placeholder="Driver Name">
+			</div>
+			
+			<button>Sign Up</button>
+		</form>
+	</div>
+	<div class="form-container sign-in-container">
+		<form action="/signin" method="post">
+			<h1>Sign in</h1>
+			<div class="social-container">
+				<a href="{{ url_for('google.login') }}" class="social"><i class="fab fa-google-plus-g"></i></a>
+				<a href="{{ url_for('facebook.login') }}" class="social"><i class="fab fa-facebook-f"></i></a>
+			</div>
+			<span>or use your account</span>
+			<input type="email" name="email" placeholder="Email" required />
+			<input type="password" name="password" placeholder="Password" required />
+			<a href="{{ url_for('request_reset') }}">Forgot your password?</a>
+    <button>Sign In</button>
+			
+		</form>
+	</div>
+	<div class="overlay-container">
+		<div class="overlay">
+			<div class="overlay-panel overlay-left">
+				<h1>Your Gateway to Immediate Medical Care and Support +</h1>
+				<p>To keep connected with us please login with your personal info</p>
+				<button class="ghost" id="signIn">Sign In</button>
+			</div>
+			<div class="overlay-panel overlay-right">
+				<h1>New to Hospitell?</h1>
+				<p>Sign Up here to Access Real-Time Bed Availability and Emergency Services.</p>
+				<button class="ghost" id="signUp">Sign Up</button>
+			</div>
+		</div>
+	</div>
+</div>
+<br><br><a href="/"><button class="tap-effect5" style="background-color: transparent; color: orangered; border: solid orangered 2px;">←
+	back to general</button></a>
+	<script>
+		document.querySelector('select[name="role"]').addEventListener('change', function() {
+			var value = this.value;
+			document.getElementById('hospital-fields').style.display = value === 'hospital_admin' ? 'block' : 'none';
+			
+		});
+	</script>
+
+<script src="{{ url_for('static', filename='js/signup.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/aos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+<script src="{{ url_for('static', filename='js/type.js') }}"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %}Admin Orders{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>All Orders</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Method</th>
+                <th>Address</th>
+                <th>Mobile</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.user.username }}</td>
+                <td>{{ order.total_amount }}</td>
+                <td>{{ order.payment_status }}</td>
+                <td>{{ order.payment_method }}</td>
+                <td>{{ order.address }}</td>
+                <td>{{ order.mobile }}</td>
+                <td>{{ order.order_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

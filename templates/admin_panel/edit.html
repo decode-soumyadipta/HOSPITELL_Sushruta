@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Admin Panel</title>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+        <meta name="description" content>
+        <meta name="keywords" content>
+        <meta name="author" content>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1">
+        <link rel="icon"
+            href="{{ url_for('static', filename='images/favicon.ico') }}"
+            type="image/x-icon">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/aos.css') }}">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/tooplate-gymso-style.css') }}">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/dashboard.css') }}">
+        <link rel="stylesheet"
+            href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+        }
+        .formbold-main-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+        }
+        .formbold-form-wrapper {
+            margin: 0 auto;
+            max-width: 550px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .formbold-input-flex {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 22px;
+        }
+        .formbold-form-input {
+            width: 100%;
+            padding-bottom: 10px;
+            border: none;
+            border-bottom: 1px solid #DDE3EC;
+            background: #FFFFFF;
+            font-weight: 500;
+            font-size: 16px;
+            color: #07074D;
+            outline: none;
+            resize: none;
+        }
+        .formbold-form-input::placeholder {
+            color: #536387;
+        }
+        .formbold-form-input:focus {
+            border-color: #6A64F1;
+        }
+        .formbold-form-label {
+            color: #07074D;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 24px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .formbold-form-input:focus + .formbold-form-label {
+            color: #6A64F1;
+        }
+        .formbold-textarea {
+            display: flex;
+            flex-direction: column;
+        }
+        .formbold-input-file {
+            margin-top: 30px;
+        }
+        .formbold-input-file input[type="file"] {
+            position: absolute;
+            top: 6px;
+            left: 0;
+            z-index: -1;
+        }
+        .formbold-input-file .formbold-input-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+        .formbold-filename-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 22px;
+        }
+        .formbold-filename {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            line-height: 24px;
+            color: #336bee;
+        }
+        .formbold-filename svg {
+            cursor: pointer;
+        }
+        .formbold-btn {
+            font-size: 16px;
+            border-radius: 5px;
+            padding: 12px 25px;
+            border: none;
+            font-weight: 500;
+            background-color: orangered;
+            color: white;
+            cursor: pointer;
+            margin-top: 25px;
+        }
+        .formbold-btn:hover {
+            box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+    </head>
+    <body data-spy="scroll" data-target="#navbarNav" data-offset="50">
+        <div class="content-wrapper">
+            <!-- MENU BAR -->
+            <nav class="navbar navbar-expand-lg fixed-top">
+                <div class="container">
+                    <img
+                        src="{{ url_for('static', filename='images/logo.png') }}"
+                        alt="Fit-O-Sphere Logo" class="logo"
+                        style="width: 64px; margin-right: 10px;">
+                    <a href="#" class="navbar-brand smoothScroll"
+                        style="margin-right: 30px;">Admin Panel</a>
+
+                    <a href="/signin"><button class="tap-effect5">←
+                            Dashboard</button></a>
+
+                </div>
+            </nav>
+
+            <!-- HERO -->
+            <section class="content">
+
+                <!-- Flashed messages container -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="alert alert-dismissible fade show" role="alert">
+                    {% for category, message in messages %}
+                    <div
+                        class="alert alert-{{ category }} alert-dismissible fade show"
+                        role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert"
+                            aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                <div class="formbold-form-wrapper">
+
+                    <div class="container mt-3">
+
+                        <form action="{% if post %}/edit/{{ post.sno }}{% else %}/new_post{% endif %}" method="POST" enctype="multipart/form-data">
+                            
+                            <div class="formbold-input-flex">
+                                <div>
+                                    <label for="title"
+                                        class="formbold-form-label"> Title
+                                    </label>
+                                    <input type="text" name="title" id="title"
+                                        placeholder="enter title to update"
+                                        class="formbold-form-input"
+                                        value="{{post.title if post else '' }}" required>
+                                </div>
+                                <div>
+                                    <label for="id" class="formbold-form-label">
+                                        ID<small> (optional)</small> </label>
+                                    <input type="text" name="id" id="id"
+                                        placeholder="enter new id"
+                                        class="formbold-form-input"
+                                        value="{{post.title if post else '' }}"/>
+                                </div>
+                            </div>
+
+                            <div class="formbold-textarea">
+                                <label for="content"
+                                    class="formbold-form-label"> Content
+                                </label>
+                                <textarea rows="6" name="content" id="content"
+                                    placeholder="write your content to update..."
+                                    class="formbold-form-input" required>{{ post.content if post else '' }}</textarea>
+                            </div>
+
+                            <div class="formbold-input-file">
+                                <div class="formbold-filename-wrapper">
+                                    <span class="formbold-filename"
+                                        id="filename1">{{post.img_file}} <br>
+                                    </span>
+
+                                    <span class="formbold-filename"
+                                        id="filename2">
+
+                                    </span>
+                                </div>
+                                <label for="upload"
+                                    class="formbold-input-label">
+                                    <svg width="20" height="20"
+                                        viewBox="0 0 20 20" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M12.3568 6.4644L7.64349 11.1786C7.5639 11.2554 7.50041 11.3474 7.45674 11.4491C7.41307 11.5507 7.39008 11.6601 7.38912 11.7707C7.38815 11.8814 7.40924 11.9911 7.45114 12.0935C7.49304 12.1959 7.55492 12.289 7.63316 12.3672C7.71141 12.4455 7.80445 12.5073 7.90686 12.5492C8.00928 12.5912 8.11901 12.6122 8.22966 12.6113C8.34031 12.6103 8.44966 12.5873 8.55133 12.5436C8.653 12.5 8.74495 12.4365 8.82182 12.3569L13.536 7.64356C14.0049 7.17468 14.2683 6.53875 14.2683 5.87565C14.2683 5.21255 14.0049 4.57661 13.536 4.10773C13.0671 3.63885 12.4312 3.37544 11.7681 3.37544C11.105 3.37544 10.469 3.63885 10.0002 4.10773L5.28599 8.8219C4.89105 9.20701 4.57652 9.6667 4.36062 10.1743C4.14473 10.6819 4.03178 11.2274 4.02832 11.779C4.02487 12.3306 4.13097 12.8774 4.34049 13.3877C4.55 13.8979 4.85876 14.3615 5.24884 14.7516C5.63892 15.1416 6.10256 15.4503 6.61287 15.6597C7.12318 15.8692 7.67 15.9752 8.2216 15.9717C8.77321 15.9681 9.31862 15.8551 9.82621 15.6391C10.3338 15.4232 10.7934 15.1086 11.1785 14.7136L15.8927 10.0002L17.071 11.1786L12.3568 15.8927C11.8151 16.4344 11.172 16.8641 10.4643 17.1573C9.75649 17.4505 8.99791 17.6014 8.23182 17.6014C7.46574 17.6014 6.70716 17.4505 5.99939 17.1573C5.29162 16.8641 4.64853 16.4344 4.10682 15.8927C3.56512 15.351 3.13542 14.7079 2.84225 14.0002C2.54908 13.2924 2.39819 12.5338 2.39819 11.7677C2.39819 11.0016 2.54908 10.2431 2.84225 9.5353C3.13542 8.82753 3.56512 8.18443 4.10682 7.64273L8.82182 2.9294C9.60767 2.17041 10.6602 1.75043 11.7527 1.75992C12.8451 1.76942 13.8902 2.20762 14.6627 2.98015C15.4353 3.75269 15.8735 4.79774 15.883 5.89023C15.8925 6.98271 15.4725 8.03522 14.7135 8.82106L10.0002 13.5369C9.76794 13.7691 9.49226 13.9532 9.18887 14.0788C8.88548 14.2045 8.56032 14.2691 8.23195 14.2691C7.90357 14.269 7.57843 14.2043 7.27507 14.0786C6.97171 13.9529 6.69607 13.7687 6.46391 13.5365C6.23174 13.3043 6.04759 13.0286 5.92196 12.7252C5.79633 12.4218 5.7317 12.0966 5.73173 11.7683C5.73177 11.4399 5.79649 11.1148 5.92219 10.8114C6.04788 10.508 6.2321 10.2324 6.46432 10.0002L11.1785 5.28606L12.3568 6.4644Z"
+                                            fill="#07074D" />
+                                    </svg>
+                                    Click here to attach files
+                                    <input type="file" name="upload" id="upload" accept=".jpg, .jpeg, .png">
+                                        
+                                </label>
+                            </div>
+
+                            <button type="submit" class="formbold-btn">
+                                {{ 'Update' if post else 'Create' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer class="site-footer">
+                <div class="container">
+                    <div class="row">
+                        <div class="ml-auto col-lg-4 col-md-5">
+                            <p class="copyright-text">Copyright &copy; 2024
+                                Fit-O-Sphere.
+                                <br>Developed by <a
+                                    href="https://www.linkedin.com/in/soumyadipta-dey"
+                                    target="_blank">Soumyadipta Dey</a></p>
+                        </div>
+                        <div
+                            class="d-flex justify-content-center mx-auto col-lg-5 col-md-7 col-12">
+                            <p class="mr-4">
+                                <i class="fa fa-envelope-o mr-1"></i>
+                                <a
+                                    href="mailto:FSSQUAD@gmail.com">FSSQUAD@gmail.com</a>
+                            </p>
+                            <p><i class="fa fa-phone mr-1"></i> 6291024334</p>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- SCRIPTS -->
+        <script
+            src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+        <script
+            src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/aos.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/type.js') }}"></script>
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+        <script
+            src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+        <script>
+        document.getElementById('upload').addEventListener('change', function(event) {
+            const fileInput = event.target;
+            const filename1 = document.getElementById('filename1');
+            const filename2 = document.getElementById('filename2');
+            
+            // Clear previous file names
+            filename1.textContent = '';
+            filename2.textContent = '';
+
+            // Add new file names
+            Array.from(fileInput.files).forEach((file, index) => {
+                if (index === 0) {
+                    filename1.textContent = file.name;
+                } else if (index === 1) {
+                    filename2.textContent = file.name;
+                }
+            });
+        });
+        $(document).ready(function(){
+            $(".alert").alert();
+        });
+    </script>
+    </body>
+</html>

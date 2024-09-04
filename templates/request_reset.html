@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Request Password Reset</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container" style="position:relative;padding-top: 60px;">
+       <center> <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Fit-O-Sphere Logo" class="logo" style="width: 75px"><br><br>
+        <h1>Reset Your Password</h1><br>
+        <form action="{{ url_for('request_reset') }}" method="post">
+            <div class="form-group">
+                <label for="email">Enter your email address</label><br>
+                <input type="email" name="email" id="email" class="form-control" required>
+            </div><br>
+            <button type="submit" style="background-color: orangered;border-color: orangered;" class="btn btn-primary">Request Password Reset</button>
+        </form>
+    </div></center>
+</body>
+</html>

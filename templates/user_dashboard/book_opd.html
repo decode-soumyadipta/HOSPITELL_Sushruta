@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+{% block title %}Book OPD Appointment{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Book OPD Appointment</h1>
+    </div>
+
+    <div class="container">
+        <form method="POST" action="{{ url_for('user_bp.book_opd') }}" onsubmit="showLoader()">
+            <div class="form-group">
+                <label for="hospital_id">Select Hospital</label>
+                <select name="hospital_id" class="form-control" required onchange="updateDepartments()">
+                    <option value="">Select Hospital</option>
+                    {% for hospital in hospitals %}
+                    <option value="{{ hospital.id }}">{{ hospital.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="appointment_date">Select Date</label>
+                <input type="date" name="appointment_date" class="form-control" required onchange="updateDepartments()">
+            </div>
+
+            <div class="form-group">
+                <label for="department_id">Select Department</label>
+                <select name="department_id" class="form-control" required onchange="updateDoctors()">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="doctor_id">Select Doctor</label>
+                <select name="doctor_id" class="form-control" required onchange="fetchTimeSlots(this.value)">
+                    <option value="">Select Doctor</option>
+                </select>
+                <a id="doctor-details-link" href="#" class="mt-2 d-block">View Doctor Details</a>
+            </div>
+
+            <div class="form-group">
+                <label for="time_slot">Select Time Slot</label>
+                <select name="time_slot" class="form-control" required>
+                    <option value="">Select Time Slot</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-4">Book Appointment</button>
+        </form>
+    </div>
+</main>
+
+<script>
+function updateDepartments() {
+    const hospitalId = document.querySelector('select[name="hospital_id"]').value;
+    const appointmentDate = document.querySelector('input[name="appointment_date"]').value;
+    
+    if (!hospitalId || !appointmentDate) {
+        document.querySelector('select[name="department_id"]').innerHTML = '<option value="">Select Department</option>';
+        document.querySelector('select[name="doctor_id"]').innerHTML = '<option value="">Select Doctor</option>';
+        document.querySelector('select[name="time_slot"]').innerHTML = '<option value="">Select Time Slot</option>';
+        return;
+    }
+
+    fetch(`/get_departments/${hospitalId}`)
+        .then(response => response.json())
+        .then(data => {
+            let departmentDropdown = document.querySelector('select[name="department_id"]');
+            departmentDropdown.innerHTML = '<option value="">Select Department</option>';
+            data.departments.forEach(department => {
+                departmentDropdown.innerHTML += `<option value="${department.id}">${department.name}</option>`;
+            });
+        });
+}
+
+function updateDoctors() {
+    const departmentId = document.querySelector('select[name="department_id"]').value;
+    const appointmentDate = document.querySelector('input[name="appointment_date"]').value;
+
+    if (!departmentId || !appointmentDate) {
+        document.querySelector('select[name="doctor_id"]').innerHTML = '<option value="">Select Doctor</option>';
+        return;
+    }
+
+    fetch(`/get_doctors/${departmentId}?date=${appointmentDate}`)
+        .then(response => response.json())
+        .then(data => {
+            let doctorDropdown = document.querySelector('select[name="doctor_id"]');
+            doctorDropdown.innerHTML = '<option value="">Select Doctor</option>';
+
+            if (data.doctors.length > 0) {
+                data.doctors.forEach(doctor => {
+                    doctorDropdown.innerHTML += `<option value="${doctor.id}">${doctor.name}</option>`;
+                });
+            } else {
+                doctorDropdown.innerHTML = '<option value="">No doctors available on this day</option>';
+            }
+        });
+}
+
+function fetchTimeSlots(doctorId) {
+    const appointmentDate = document.querySelector('input[name="appointment_date"]').value;
+
+    if (!doctorId || !appointmentDate) {
+        document.querySelector('select[name="time_slot"]').innerHTML = '<option value="">Select Time Slot</option>';
+        return;
+    }
+
+    fetch(`/get_time_slots/${doctorId}/${appointmentDate}`)
+        .then(response => response.json())
+        .then(data => {
+            let timeSlotDropdown = document.querySelector('select[name="time_slot"]');
+            timeSlotDropdown.innerHTML = '<option value="">Select Time Slot</option>';
+            if (data.time_slots.length > 0) {
+                data.time_slots.forEach(slot => {
+                    timeSlotDropdown.innerHTML += `<option value="${slot}">${slot}</option>`;
+                });
+            } else {
+                timeSlotDropdown.innerHTML = '<option value="">No time slots available</option>';
+            }
+        });
+}
+</script>
+
+{% block scripts %}
+<script>
+function showLoader() {
+    document.getElementById('loader').style.display = 'flex';
+}
+</script>
+{% endblock %}
+{% endblock %}

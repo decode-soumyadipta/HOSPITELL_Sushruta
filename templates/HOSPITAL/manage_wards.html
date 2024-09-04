@@ -1,0 +1,56 @@
+<!-- manage_wards.html -->
+{% extends "HOSPITAL/hospital_base_layout.html" %}
+{% block title %}Manage Wards{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+  <div class="pagetitle">
+    <h1>Manage Wards</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('hospital_bp.hospital_dashboard') }}">Home</a></li>
+        <li class="breadcrumb-item active">Manage Wards</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="container mt-4">
+    <div class="form-container card p-4">
+      <h3 class="text-center">Add New Ward</h3>
+      <form method="POST" action="{{ url_for('hospital_bp.manage_wards') }}">
+        <div class="form-group">
+          <label for="name">Ward Name</label>
+          <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="managed_by">Managed By Crew Name</label>
+          <input type="text" class="form-control" id="managed_by" name="managed_by" required>
+        </div>
+        <div class="form-group">
+          <label for="head_wardboy_name">Head Wardboy Name</label>
+          <input type="text" class="form-control" id="head_wardboy_name" name="head_wardboy_name" required>
+        </div>
+        <div class="form-group text-center">
+          <button type="submit" class="btn btn-orange-red">Add Ward</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="mt-4">
+      <h3 class="text-center">Registered Wards</h3><br>
+      <div class="list-group">
+        {% for ward in wards %}
+        <a 
+           class="list-group-item list-group-item-action">
+            {{ ward.name }} (Managed by {{ ward.managed_by }}, Head: {{ ward.head_wardboy_name }})
+        </a>
+        {% endfor %}
+    </div>
+    
+    </div>
+  </div>
+
+
+
+</main>
+{% endblock %}

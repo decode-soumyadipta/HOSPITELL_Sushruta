@@ -1,0 +1,431 @@
+{% extends "layout.html" %}
+
+{% block title %}Book Bed{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <div class="pagetitle">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Book Hospital Bed</h1>
+    </div>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('user_bp.dashboard') }}">Home</a></li>
+        <li class="breadcrumb-item active">Book Bed</li>
+      </ol>
+    </nav>
+  </div><!-- End Page Title -->
+
+  <!-- Location Permission Prompt -->
+  <div id="location-prompt">
+    <button onclick="getLocation()">Allow Location Access</button>
+  </div>
+
+  <!-- Current Location Display -->
+  <div id="current-location" style="display: none;">
+    <h3>Hi, You are here:</h3><br>
+    <p id="location-address" style="font-weight: bold; color: orangered; display: flex; align-items: center;">
+      <span style="font-size: 1.5em; margin-right: 8px;"><i class="fas fa-map-marker-alt"></i></span>
+      <span id="address-text"></span>
+    </p>
+  </div>
+  {% if current_bookings %}
+    <div class="alert alert-info">
+      <strong>Current Bookings:</strong>
+      <ul>
+        {% for booking in current_bookings %}
+          <li>
+            Hospital: {{ booking.hospital.name }}<br>
+            Bed Type: {{ booking.bed_type }}<br>
+            Admission Code: {{ booking.admission_code }}<br>
+            Distance: {{ booking.distance }} km<br>
+            Booking Time: {{ booking.created_at.strftime('%Y-%m-%d %H:%M:%S') }}<br><br>
+            <button onclick="cancelBooking({{ booking.id }})" class="btn btn-danger">Cancel Booking</button>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% else %}
+    <p>No current bookings.</p>
+  {% endif %}
+  <!-- Filter Form -->
+  <form id="filter-form">
+    <label for="bed-type">Filter by Bed Type:</label>
+    <select id="bed-type" name="bed_type" class="form-control w-50">
+      <option value="icu">ICU</option>
+      <option value="opd">OPD</option>
+      <option value="general">General</option>
+    </select>
+  </form>
+
+  <div id="hospital-gallery" class="d-flex flex-row flex-nowrap overflow-auto mt-4">
+    <!-- Hospital cards will be dynamically inserted here -->
+
+  </div>
+<!-- Add loader HTML -->
+<div id="loader" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+  <div class="spinner-border" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+  <p>Booking bed for you...</p>
+</div>
+  <!-- Map container -->
+  <div id="map" style="height: 500px; width: 100%; position: relative; margin-top: 20px;">
+    <!-- Relocate Button -->
+    <button id="relocate-button" onclick="relocate()" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">Relocate</button>
+  </div> <!-- Map container for live ambulance tracking -->
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <script>
+    let userLocation = { lat: 0, lng: 0 };
+    let markerLocation = { lat: 0, lng: 0 };
+    let map, marker;
+    const locationAttempts = 3;
+    let locations = [];
+
+    function relocate() {
+      if (markerLocation.lat !== 0 && markerLocation.lng !== 0) {
+        map.setView([markerLocation.lat, markerLocation.lng], 13); // Adjust zoom level as needed
+      } else {
+        alert("Current location is not available.");
+      }
+    }
+
+    function getLocation(attempt = 1) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          locations.push({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          });
+
+          if (attempt < locationAttempts) {
+            getLocation(attempt + 1);
+          } else {
+            // Calculate average location
+            const avgLat = locations.reduce((sum, loc) => sum + loc.lat, 0) / locations.length;
+            const avgLng = locations.reduce((sum, loc) => sum + loc.lng, 0) / locations.length;
+            userLocation = { lat: avgLat, lng: avgLng };
+            localStorage.setItem('user_location', JSON.stringify(userLocation));
+            displayCurrentLocation(userLocation);
+          }
+        }, showError, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+
+    function showError(error) {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          alert("User denied the request for Geolocation.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          alert("Location information is unavailable.");
+          break;
+        case error.TIMEOUT:
+          alert("The request to get user location timed out.");
+          break;
+        case error.UNKNOWN_ERROR:
+          alert("An unknown error occurred.");
+          break;
+      }
+    }
+    function cancelBooking(bookingId) {
+    fetch(`/cancel_booking/${bookingId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Booking cancelled successfully.');
+            location.reload(); // Reload the page to update bookings
+        } else {
+            alert('Failed to cancel the booking.');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+    function fetchHospitalData(bedType, location) {
+    fetch('/nearby_hospitals', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            latitude: location.lat,
+            longitude: location.lng,
+            bed_type: bedType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        let gallery = document.getElementById('hospital-gallery');
+        gallery.innerHTML = ''; // Clear previous content
+
+        data.forEach(hospital => {
+    let card = document.createElement('div');
+    card.classList.add('card', 'shadow-lg', 'm-3', 'hospital-card', 'border-0');
+    card.style.width = '20rem';
+    card.style.borderRadius = '15px'; // Rounded corners
+
+    card.innerHTML = `
+    <div class="card-body p-4">
+        <h5 class="card-title text-primary font-weight-bold">${hospital.name}</h5>
+        <p class="card-text font-weight-bold">Distance: ${hospital.distance} km</p>
+        <p class="card-text font-weight-bold">ICU Beds: <span class="text-success">${hospital.vacant_icu_beds}</span></p>
+        <p class="card-text font-weight-bold">OPD Beds: <span class="text-warning">${hospital.vacant_opd_beds}</span></p>
+        <p class="card-text font-weight-bold">General Beds: <span class="text-info">${hospital.vacant_general_beds}</span></p>
+        <button class="btn btn-danger mt-3 w-100 font-weight-bold" onclick="bookBed(${hospital.id})">Book Now</button>
+    </div>
+`;
+
+    gallery.appendChild(card);
+                
+            // Add hospital markers on the map
+            L.marker([hospital.latitude, hospital.longitude], {icon: createBedIcon(hospital)})
+              .addTo(map)
+              .bindPopup(`<b>${hospital.name}</b><br>
+                          Vacant ICU Beds: ${hospital.vacant_icu_beds}<br>
+                          Vacant OPD Beds: ${hospital.vacant_opd_beds}<br>
+                          Vacant General Beds: ${hospital.vacant_general_beds}`)
+              .openPopup();
+        });
+    });
+}
+
+
+function createBedIcon(hospital) {
+    let totalBeds = hospital.vacant_icu_beds + hospital.vacant_opd_beds + hospital.vacant_general_beds;
+    let bedColor = 'green'; // default to green if beds are available
+
+    if (totalBeds === 0) {
+        bedColor = 'red'; // no beds available
+    }
+
+    return L.divIcon({
+        className: 'custom-bed-icon',
+        html: `<div style="background-color: ${bedColor}; width: 20px; height: 20px; border-radius: 50%;"></div>`
+    });
+}
+
+function displayCurrentLocation(location) {
+    if (!map) {
+        map = L.map('map').setView([location.lat, location.lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        marker = L.marker([location.lat, location.lng], { draggable: true })
+            .addTo(map)
+            .bindPopup('Loading address...')
+            .openPopup();
+
+        marker.on('dragend', function (e) {
+            const newLatLng = marker.getLatLng();
+            userLocation = { lat: newLatLng.lat, lng: newLatLng.lng };
+            markerLocation = userLocation;
+            localStorage.setItem('user_location', JSON.stringify(userLocation));
+            fetchHospitalData(document.getElementById('bed-type').value, userLocation);
+            updateAddress(userLocation);
+        });
+
+    } else {
+        map.setView([location.lat, location.lng], 13);
+        marker.setLatLng([location.lat, location.lng]).update();
+        updateAddress(location);
+    }
+
+    markerLocation = location;
+
+    // Initial address update
+    updateAddress(location);
+    fetchHospitalData(document.getElementById('bed-type').value, userLocation);
+}
+
+function updateAddress(location) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${location.lat}&lon=${location.lng}&format=json`)
+        .then(response => response.json())
+        .then(data => {
+            const address = data.display_name;
+            marker.bindPopup(`<b>Your Current Location</b><br>${address}`).openPopup();
+            document.getElementById('address-text').innerText = address;
+
+            // Save the address to the user's profile
+            saveAddressToProfile(location, address);
+        });
+}
+
+function saveAddressToProfile(location, address) {
+    fetch('/save_address', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            location: `${location.lat},${location.lng}`,
+            address: address
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            alert('Failed to save your address.');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+      let storedLocation = localStorage.getItem('user_location');
+      if (storedLocation) {
+        userLocation = JSON.parse(storedLocation);
+        document.getElementById('location-prompt').style.display = 'none';
+        document.getElementById('current-location').style.display = 'block';
+        displayCurrentLocation(userLocation);
+      } else {
+        getLocation();
+      }
+
+      document.getElementById('bed-type').addEventListener('change', function () {
+        if (userLocation.lat !== 0 && userLocation.lng !== 0) {
+          fetchHospitalData(this.value, userLocation);
+        }
+      });
+    });
+
+    function bookBed(hospitalId) {
+    document.getElementById('loader').style.display = 'block';
+
+    fetch('/book_bed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            hospital_id: hospitalId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loader').style.display = 'none';
+
+        if (data.success) {
+            alert('Bed booked successfully.');
+            location.reload(); // Reload to update the booking details
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        document.getElementById('loader').style.display = 'none';
+        console.error('Error:', error);
+    });
+}
+
+
+    function showWhatsAppNumberInput() {
+        const whatsappNumber = prompt("Your registered phone number is not a WhatsApp number. Please enter your WhatsApp number:");
+        if (whatsappNumber) {
+            fetch('/update_whatsapp_number', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `whatsapp_number=${encodeURIComponent(whatsappNumber)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert(data.message || "Failed to update WhatsApp number.");
+                }
+            });
+        }
+    }
+
+function savePhoneNumber(phone, callback) {
+    fetch('/save_phone_number', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: phone })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Phone number saved successfully.");
+            callback();
+        } else {
+            alert("Failed to save phone number.");
+        }
+    });
+}
+  </script>
+  <style>
+ .hospital-card {
+    border-radius: 15px; /* Softly rounded corners */
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    background-color: #ffffff; /* White background for clean look */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    border: none; /* Remove default border */
+}
+
+.hospital-card:hover {
+    transform: scale(1.05); /* Slightly enlarge on hover */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Enhance shadow on hover */
+}
+
+.hospital-card .card-title {
+    font-size: 1.25rem; /* Slightly larger title */
+    font-weight: 700; /* Bold title */
+    color: #2c3e50; /* Dark color for title */
+}
+
+.hospital-card .card-text {
+    font-weight: 600; /* Bold text */
+    color: #7f8c8d; /* Muted color for text */
+}
+
+.hospital-card .card-text span {
+    font-weight: 700; /* Make bed count numbers bold */
+}
+
+.hospital-card .btn-danger {
+    background-color: #e74c3c; /* Red button for contrast */
+    border-color: #e74c3c; /* Match border with background */
+}
+
+.hospital-card .btn-danger:hover {
+    background-color: #c0392b; /* Darken button on hover */
+    border-color: #c0392b;
+}
+
+#hospital-gallery {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.5) transparent;
+}
+
+#hospital-gallery::-webkit-scrollbar {
+    height: 8px;
+}
+
+#hospital-gallery::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+}
+  </style>
+</main><!-- End #main -->
+
+{% endblock %}

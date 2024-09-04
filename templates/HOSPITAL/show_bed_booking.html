@@ -1,0 +1,181 @@
+{% extends "HOSPITAL/hospital_base_layout.html" %}
+{% block title %}Manage Bookings{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Manage Bookings</h1>
+    </div>
+
+    <div class="container mt-4">
+        {% for booking in bookings %}
+        <div class="card mb-3 shadow-sm {% if booking.status == 'Cancelled' %}bg-danger{% elif booking.status == 'CheckedIn' %}bg-success{% else %}bg-warning{% endif %} text-white">
+            <div class="card-body">
+                <h5 class="card-title">Booking ID: {{ booking.id }}</h5>
+                <p class="card-text">Patient: {{ booking.user.name }}</p>
+                <p class="card-text">Email: {{ booking.user.email }}</p>
+                <p class="card-text">Booking Status: {{ booking.status }}</p>
+                <p class="card-text">Distance: {{ booking.distance }} km</p>
+                <p class="card-text">Booked At: {{ booking.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                  <!-- Display Assigned Bed Number if Checked In -->
+                {% if booking.status == 'CheckedIn' %}
+                <p class="card-text"><strong>Assigned Bed Number: {{ booking.assigned_bed_number }}</strong></p>
+                {% endif %}<br>
+
+                <!-- Check-In Button only for Confirmed bookings -->
+                {% if booking.status == 'Confirmed' %}
+                <button class="btn btn-primary" onclick="showCheckInForm({{ booking.id }})">Check-In</button>
+
+                <!-- Check-In Form -->
+                <div id="check-in-form-{{ booking.id }}" style="display:none;">
+                    <input type="text" id="admission-code-{{ booking.id }}" placeholder="Enter Admission Code" class="form-control mt-3">
+                    <button class="btn btn-primary mt-2" onclick="verifyAdmissionCode({{ booking.id }})">Verify</button>
+                    <div id="verification-result-{{ booking.id }}" class="mt-2"></div>
+                </div>
+                {% elif booking.status == 'CheckedIn' %}
+                <p class="text-success"><strong>Patient Checked-In</strong></p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</main>
+
+<script>
+// Show the check-in form
+function showCheckInForm(bookingId) {
+    document.getElementById(`check-in-form-${bookingId}`).style.display = 'block';
+}
+
+// Verify the admission code
+function verifyAdmissionCode(bookingId) {
+    const admissionCode = document.getElementById(`admission-code-${bookingId}`).value;
+
+    fetch(`/verify_admission_code/${bookingId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ admission_code: admissionCode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultDiv = document.getElementById(`verification-result-${bookingId}`);
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="text-success">Admission code verified! &#10004;</div>
+                <div class="mt-3">
+                    <label for="patient-name-${bookingId}">Patient Name:</label>
+                    <input type="text" id="patient-name-${bookingId}" class="form-control mb-2">
+
+                    <label for="bed-type-${bookingId}">Bed Type:</label>
+                    <select id="bed-type-${bookingId}" class="form-control mb-2" onchange="updateWardOptions(${bookingId})">
+                        <option value="">Select Bed Type</option>
+                        <option value="ICU">ICU</option>
+                        <option value="OPD">OPD</option>
+                        <option value="General">General</option>
+                    </select>
+
+                    <label for="ward-${bookingId}">Ward:</label>
+                    <select id="ward-${bookingId}" class="form-control mb-2">
+                        <option value="">Select Ward</option>
+                    </select>
+
+                    <button class="btn btn-primary mt-2" onclick="completeCheckIn(${bookingId})">Complete Check-In</button>
+                </div>`;
+        } else {
+            resultDiv.innerHTML = `<div class="text-danger">Invalid admission code.</div>`;
+        }
+    });
+}
+
+// Update the ward dropdown based on the selected bed type
+function updateWardOptions(bookingId) {
+    const bedType = document.getElementById(`bed-type-${bookingId}`).value;
+    const wardDropdown = document.getElementById(`ward-${bookingId}`);
+
+    if (bedType) {
+        fetch(`/get_wards_by_bed_type/${bedType}`)
+        .then(response => response.json())
+        .then(data => {
+            wardDropdown.innerHTML = ''; // Clear previous options
+            data.wards.forEach(ward => {
+                const option = document.createElement('option');
+                option.value = ward.id;
+                option.textContent = `${ward.name} (${ward.available_beds} available)`;
+                wardDropdown.appendChild(option);
+            });
+        });
+    } else {
+        wardDropdown.innerHTML = '<option value="">Select Ward</option>';
+    }
+}
+
+// Complete the check-in process
+function completeCheckIn(bookingId) {
+    const patientName = document.getElementById(`patient-name-${bookingId}`).value;
+    const wardId = document.getElementById(`ward-${bookingId}`).value;
+    const bedType = document.getElementById(`bed-type-${bookingId}`).value;
+
+    fetch(`/complete_check_in/${bookingId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ patient_name: patientName, ward_id: wardId, bed_type: bedType })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Check-In Completed Successfully! Assigned Bed: ${data.bed_number}`);
+            location.reload(); // Refresh the page to show updated status
+        } else {
+            alert('Failed to complete check-in.');
+        }
+    });
+}
+</script>
+
+<style>
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    background-color: #f8f9fa; /* Light background color */
+}
+
+.card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.card .card-body {
+    padding: 1.5rem;
+}
+
+.bg-danger {
+    background-color: #f8d7da !important; /* Light red for canceled bookings */
+    color: #721c24 !important; /* Dark red text for contrast */
+}
+
+.bg-warning {
+    background-color: #fff3cd !important; /* Light yellow for pending bookings */
+    color: #856404 !important; /* Dark yellow text for contrast */
+}
+
+.bg-success {
+    background-color: #d4edda !important; /* Light green for checked-in bookings */
+    color: #155724 !important; /* Dark green text for contrast */
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+</style>
+{% endblock %}

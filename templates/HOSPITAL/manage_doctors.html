@@ -1,0 +1,72 @@
+{% extends "HOSPITAL/hospital_base_layout.html" %}
+{% block title %}Manage Doctors{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Manage Doctors for {{ hospital.name }}</h1>
+    </div>
+
+    <div class="container mt-4">
+        <form method="POST" action="{{ url_for('hospital_bp.manage_doctors') }}">
+            <div class="form-group">
+                <label for="name">Doctor Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="expertise">Expertise</label>
+                <input type="text" name="expertise" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="chamber_timings">Chamber Timings</label>
+                <input type="text" name="chamber_timings" class="form-control" placeholder="e.g., 10:00-12:00" required>
+            </div>
+
+            <div class="form-group">
+                <label for="availability_days">Availability Days</label>
+                <input type="text" name="availability_days" class="form-control" placeholder="e.g., Mon,Wed,Fri" required>
+            </div>
+
+            <div class="form-group">
+                <label for="department_id">Department</label>
+                <select name="department_id" class="form-control" required>
+                    <option value="">Select Department</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-4">Register Doctor</button>
+        </form>
+
+        <hr>
+
+        <h3>Existing Doctors</h3>
+        <table class="table table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Expertise</th>
+                    <th>Chamber Timings</th>
+                    <th>Availability Days</th>
+                    <th>Department</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doctor in doctors %}
+                <tr>
+                    <td>{{ doctor.name }}</td>
+                    <td>{{ doctor.expertise }}</td>
+                    <td>{{ doctor.chamber_timings }}</td>
+                    <td>{{ doctor.availability_days }}</td>
+                    <td>{{ doctor.department.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+{% endblock %}

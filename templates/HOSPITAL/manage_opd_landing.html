@@ -1,0 +1,58 @@
+{% extends "HOSPITAL/hospital_base_layout.html" %}
+{% block title %}Manage OPD{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Manage OPD for {{ hospital.name }}</h1>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <a href="{{ url_for('hospital_bp.manage_departments', hospital_id=hospital.id) }}">
+                    <div class="card text-center p-3 shadow-sm" style="background-color: #f3e5f5; color: #6a1b9a;">
+                        <div class="card-body">
+                            <h5 class="card-title">Manage Departments</h5>
+                            <p>Register and manage hospital departments.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <a href="{{ url_for('hospital_bp.manage_doctors', hospital_id=hospital.id) }}">
+                    <div class="card text-center p-3 shadow-sm" style="background-color: #c8e6c9; color: #388e3c;">
+                        <div class="card-body">
+                            <h5 class="card-title">Manage Doctors</h5>
+                            <p>Register and manage doctors for OPD.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <a href="{{ url_for('hospital_bp.show_opd_bookings', hospital_id=hospital.id) }}">
+                    <div class="card text-center p-3 shadow-sm" style="background-color: #ffccbc; color: #d84315;">
+                        <div class="card-body">
+                            <h5 class="card-title">Show OPD Bookings</h5>
+                            <p>View and manage patient bookings for OPD.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <a href="{{ url_for('hospital_bp.manage_virtual_queue', hospital_id=hospital.id) }}">
+                    <div class="card text-center p-3 shadow-sm" style="background-color: #b3e5fc; color: #0288d1;">
+                        <div class="card-body">
+                            <h5 class="card-title">Manage Virtual Queue</h5>
+                            <p>Create and manage the OPD queue for checked-in patients.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
