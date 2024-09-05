@@ -31,15 +31,7 @@ supercharged by AI Captain (ResQ)
 
 
 
-## Table Of Contents
 
-    Features
-    Tech Stack
-    Installation
-    Usage
-    Screenshots
-    Contributing
-    License
 ## Tech Stack
 
     Backend: Python (Flask Framework)
