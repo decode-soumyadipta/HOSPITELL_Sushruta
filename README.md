@@ -1,7 +1,11 @@
 # HOSPITELL_sushruta
+
  This is our ptoject folder
+ 
 🏥 Hospital Management System with AI Chatbot - Hospitell
+
 Simplifying OPD and Bed Booking
+
 This project automates hospital OPD appointment and bed booking through an AI-powered chatbot, making the process seamless for both patients and staff.
 
 🌟 Key Features
