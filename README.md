@@ -1,5 +1,5 @@
 
-# HOSPITELL: <p>one stop web-solution that help Hospitals to manage Availability of Beds, Admission of patients and OPD management, with an integrated AI- Chatbot</p>
+# HOSPITELL: <p style="color= red;">A one stop web-solution that help Hospitals to manage Availability of Beds, Admission of patients and OPD management, with an integrated AI- Chatbot</p>
 
 We're building HOSPITELL, a one stop web-solution that help Hospitals to manage Availability of Beds, Admission of 
 patients and OPD management, with an integrated AI- Chatbot that will enhance patient's as well as Hospital Admin's 
