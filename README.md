@@ -39,7 +39,7 @@ supercharged by AI Captain (ResQ)
     Frontend: HTML5, CSS3, JavaScript
     Database: SQLite
     Version Control: Git
-    Deployment: Heroku
+    Deployment: Heroku, Hostinger
 ## Installation
 
 
