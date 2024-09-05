@@ -87,7 +87,7 @@ We welcome contributions from the community! To contribute:
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](https://github.com/decode-soumyadipta/HOSPITELL_Sushruta/blob/2ba6b933e6195a7563aa4abc4d522d85f348f9da/LICENSE)
 
 
 ## Contact
