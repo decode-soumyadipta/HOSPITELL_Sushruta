@@ -18,9 +18,9 @@ supercharged by AI Captain (ResQ)
     Tech Stack
     Installation
     Usage
-    Screenshots
     Contributing
     License
+    Contact
 ## Features
 
 - Patient Management: Easily manage patient records, admissions, and discharges.
