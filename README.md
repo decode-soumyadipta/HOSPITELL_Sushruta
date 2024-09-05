@@ -1,6 +1,7 @@
 
 # HOSPITELL: Effortless Bed & OPD Management 
 ### ⭕Instant Availability for Patients, Streamlined Control for Hospitals- superchrged by ResQ Ai
+
 We're building HOSPITELL, a one stop web-solution that help Hospitals to manage Availability of Beds, Admission of 
 patients and OPD management, with an integrated AI- Chatbot that will enhance patient's as well as Hospital Admin's 
 experience. 
