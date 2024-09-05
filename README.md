@@ -30,15 +30,7 @@ supercharged by AI Captain (ResQ)
 - Responsiveness: Optimized for various screen sizes, making it accessible on desktop, tablet, and mobile devices.
 
 
-## Table Of Contents
 
-    Features
-    Tech Stack
-    Installation
-    Usage
-    Screenshots
-    Contributing
-    License
 ## Table Of Contents
 
     Features
