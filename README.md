@@ -8,7 +8,7 @@ Our vision- Effortless Bed & OPD Management: Instant Availability for Patients, 
 supercharged by AI Captain (ResQ)
 
 
-(![Hospitell ](https://github.com/user-attachments/assets/b67f4445-039a-4831-8710-85fbf63cebdc)
+![Hospitell ](https://github.com/user-attachments/assets/b67f4445-039a-4831-8710-85fbf63cebdc)
 
 
 
